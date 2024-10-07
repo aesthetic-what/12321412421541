@@ -1,0 +1,72 @@
+using Microsoft.Data.Sqlite;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Security.Cryptography;
+using System.Security.RightsManagement;
+
+namespace Reg
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+            string query = "CREATE TABLE IF NOT EXISTS Users(_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, Login TEXT NOT NULL UNIQUE ON CONFLICT IGNORE, Password TEXT NOT NULL UNIQUE ON CONFLICT IGNORE)"; // Создание таблицы в БД
+            dbConnect(query); // вызов функции для выполнения SQL запросов
+        }
+        private void dbConnect(string query) // Выполнение SQL запросов 
+        {
+            using (var connection = new SqliteConnection("Data Source=userdata.db")) 
+            {
+                connection.Open(); // Подключение к БД
+                SqliteCommand command = new SqliteCommand();
+                command.Connection = connection;
+                command.CommandText = query; // Ввод SQL запроса
+                command.ExecuteNonQuery(); // Инициализация SQL запроса
+            }
+        }
+
+      
+            static string sha256(string text) // Хэширование с помощью SHA256
+            {
+                var crypt = new SHA256Managed();
+                var hash = new System.Text.StringBuilder();
+                byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(text));
+                foreach (byte theByte in crypto)
+                {
+                    hash.Append(theByte.ToString("x2"));
+                }
+                return hash.ToString();
+            }
+       
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if ((textLogin.Text.Equals("")) || (textPassword.Text.Equals(""))) // Проверка на заполненность полей для логина и пароля
+            {
+                MessageBox.Show("Вы не заполнили обязательные поля!", "Внимание");
+            }
+            else
+            {
+                string hashLogin = textLogin.Text;
+                string hashPassword = textPassword.Text;
+                hashLogin = sha256(hashLogin); // Вызов функции хэширования
+                hashPassword = sha256(hashPassword); // Вызов функции хэширования
+                string query = $"INSERT INTO Users (Login, Password) VALUES ('{hashLogin}', '{hashPassword}')"; // Создание строки с запросом для записи хэшированных данных в БД
+                dbConnect(query); // Вызов функции SQL запросов
+                MessageBox.Show("Вы зарегистрированны!", "Успех!");
+            }
+        }
+    }
+}
