@@ -1,6 +1,5 @@
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtSql import QSqlTableModel
 from PyQt5 import uic
 
 import pyodbc
@@ -25,13 +24,32 @@ class Add_data_window(QMainWindow):
 
         # вывод данных из БД
         cursor = conn.cursor()
-        cursor.execute("""INSERT INTO users_table (username, user_number, role) VALUES (?, ?, ?)""", (username, nubmer, role))
+        cursor.execute("INSERT INTO users_table (username, user_number, role) VALUES (?, ?, ?)", (username, nubmer, role))
+        conn.commit()
+
+
+class Del_data_window(QMainWindow):
+    def __init__(self):
+       super().__init__()
+       uic.loadUi(r"design\add_data_form.ui", self)
+       self.setWindowTitle("Delete data")
+       self.model = QStandardItemModel(self)
+       self.pushButton.clicked.connect(self.load_data)
+
+
+class Edit_data_window(QMainWindow):
+    def __init__(self):
+       super().__init__()
+       uic.loadUi(r"design\add_data_form.ui", self)
+       self.setWindowTitle("Edit data")
+       self.model = QStandardItemModel(self)
+       self.pushButton.clicked.connect(self.load_data)
 
 
 class Main_window(QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi(r"design\data_form_server.ui", self)
+        uic.loadUi(r"data_form_server.ui", self)
         self.setWindowTitle("DataBase")
         self.model = QStandardItemModel(self)
 
@@ -43,8 +61,8 @@ class Main_window(QMainWindow):
 
         # Подключение кнопок
         self.add_data.clicked.connect(self.add_data_button)
-        # self.del_data.clicked.connect(self.del_data_button)
-        # self.edit_data.clicked.connect(self.edit_data_button)
+        self.del_data.clicked.connect(self.del_data_button)
+        self.edit_data.clicked.connect(self.edit_data_button)
 
     def load_data(self):
         # подключение к базе данных
@@ -53,7 +71,7 @@ class Main_window(QMainWindow):
 
         # вывод данных из БД
         cursor = conn.cursor()
-        cursor.execute("""SELECT * FROM user_table""")
+        cursor.execute("SELECT * FROM user_table")
 
         for row in cursor.fetchall():
             print(row)
@@ -63,6 +81,14 @@ class Main_window(QMainWindow):
     def add_data_button(self):
         self.add = Add_data_window()
         self.add.show()
+
+    def del_data_button(self):
+        self.del_wdn = Del_data_window()
+        self.del_wdn.show()
+
+    def edit_data_button(self):
+        self.edit = Edit_data_window()
+        self.edit.show
         
 
 if __name__ == '__main__':
